@@ -10,7 +10,7 @@
 typedef struct node* list;
 struct node{
 	char * elem;
-	list next;	
+	list next;
 };
 
 short eoflag = 0, Kflag = 0, Nflag = 0, Aflag = 0, BPcount = 0,AEflag = 0,APPflag=0, Pcount = 0;
@@ -73,7 +73,7 @@ char * readW(){
 					str = NULL;
 				}
 				return str;
-					
+
 			}
 			if(!fl){
 				free(str);
@@ -112,12 +112,12 @@ void listPrint(list l){
 	if(l){
 		printf("%s\n",l->elem);
 		listPrint(l->next);
-	}	
+	}
 }
 
 void insert(list * l, char * s){
 	if(*l){
-		insert(&((*l)->next),s);		
+		insert(&((*l)->next),s);
 	}else{
 		*l = (list)malloc(sizeof(struct node));
 		(*l)->elem = s;
@@ -171,7 +171,7 @@ int ifCD(char** cmnd){
 		}
 		return 1;
 	}
-	return 0;	
+	return 0;
 }
 
 int ifEXIT(char** cmnd){
@@ -179,7 +179,7 @@ int ifEXIT(char** cmnd){
 		return 1;
 	}
 	else{
-		return 0;	
+		return 0;
 	}
 }
 
@@ -338,7 +338,7 @@ int command(char ** cmd,list l,char*fnameIN,char*fnameOUT){
 }
 
 void terminateSONS(){
-	int pid,s;	
+	int pid,s;
 	if((pid=waitpid(-1,&s,WNOHANG))>0)
 	{
 			printf("[%d] terminated\n", pid);
@@ -392,7 +392,7 @@ void testarg(char ** a){
 	int i = 0;
 	while(a[i++])
 		printf("%s\n",a[i-1]);
-	
+
 }
 
 int main(){
