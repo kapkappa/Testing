@@ -139,7 +139,7 @@ void Server::Request() {
         exit(6);
     }
     if(req == 0) { return; }
-    cout << request << endl;
+    //cout << request << endl;
 
     if(strncmp(request, "GET", 3) && strncmp(request, "HEAD", 4)) {
         Response("501.html", "HTTP/1.1 501 NotImplemented");
