@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -59,6 +60,7 @@ void Server::Create_client() {
         exit(5);
     }
 }
+
 
 int filetype(const char*req) {
     int i = 0;
@@ -165,6 +167,59 @@ void Server::Request() {
             copy(&request[5], &request[i], &path[0]);
             path[i-5] = 0;
         }
+
+        if(!strncmp(path, "cgi-bin", 7)) {
+            int status;
+            int pid;
+            string logfile = to_string(getpid()) + ".txt";
+            if((pid = fork()) < 0) {
+                cerr << "Can't make process" << endl;
+                exit(1);
+            }
+            if (pid == 0) {
+                chdir("./cgi-bin");
+                //лог файл
+                int fd = open(logfile.c_str(), O_WRONLY|O_CREAT|O_TRUNC, 0644);
+                //get exec filename
+                string exec_filename = "./cgi";
+                //создаём окружение
+                char* argv[] = {(char*)exec_filename.c_str(), NULL};
+
+                char params[strlen(path)-12];
+                copy(&path[12], &path[strlen(path)], &params[0]);
+                params[strlen(path)-12]=0;
+                char**env = new char*[2];
+
+                env[0] = new char[(int)strlen("QUERY_STRING=") + (int)strlen(params) + 1];
+                strcpy(env[0], "QUERY_STRING=");
+                strcat(env[0], params);
+
+                env[1] = NULL;
+
+
+                //EXEC
+                dup2(fd, 1);
+                execve(exec_filename.c_str(), argv, env);
+                //TODO CLEAR MEMORY
+                exit(1);
+            }
+            wait(&status);
+            if (WIFEXITED(status)) {
+                //HANDLING
+                if (WEXITSTATUS(status)) {
+                    //не окей
+                    cerr << "CGI has finihed with status " << WEXITSTATUS(status) << endl;
+                    Response("src/cgi.html", "HTTP/1.1 500 MyServer");
+                } else {
+                    //окей
+                    logfile = "cgi-bin/" + logfile;
+                    Response(logfile.c_str(), "HTTP/1.1 200 MyServer");
+                }
+            } else if (WIFSIGNALED(status)) {
+                cerr << "CGI has finished with signal " << WIFSIGNALED(status) << endl;
+                Response("src/cgi.html", "HTTP/1.1 500 MyServer");
+            }
+        } else {
         int Filefd = open(path, O_RDONLY);
         struct stat buff;
         fstat(Filefd, &buff);
@@ -177,6 +232,7 @@ void Server::Request() {
         } else {                                                        //if open or if homepage
             if (home) Response("index.html", "HTTP/1.1 200 MyServer");
             else Response(path, "HTTP/1.1 200 MyServer");
+        }
         }
     }
 }
